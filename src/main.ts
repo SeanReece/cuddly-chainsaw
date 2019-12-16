@@ -7,12 +7,9 @@ async function run(): Promise<void> {
 
     const octokit = new github.GitHub(token)
 
-    console.log(github.context.repo)
+    // console.log(github.context.repo)
 
-    const {data: pullRequest} = await octokit.pulls.list({
-      owner: 'octokit',
-      repo: 'rest.js'
-    })
+    const {data: pullRequest} = await octokit.pulls.list({...github.context.repo})
 
     console.log(pullRequest)
   } catch (error) {
