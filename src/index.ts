@@ -5,7 +5,7 @@ import axios from 'axios'
 async function run(): Promise<void> {
   try {
     const token: string = core.getInput('repo-token')
-    const slackWebhook: string = core.getInput('slack_webhook')
+    const slackWebhook: string = core.getInput('slack-webhook')
 
     const octokit = new github.GitHub(token)
 
