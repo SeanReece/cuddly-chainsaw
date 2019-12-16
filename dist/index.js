@@ -8802,9 +8802,41 @@ function run() {
             const octokit = new github.GitHub(token);
             console.log(github.context.repo);
             const { data: pullRequests } = yield octokit.pulls.list(Object.assign({}, github.context.repo));
-            // console.log(pullRequests)
+            const reso = yield octokit.graphql(`query prs($owner: String!, $repo: String!) {
+      repository(owner:$owner, name:$repo) {
+        pullRequests(first: 100, states: OPEN, labels: "ready") {
+          nodes {
+            id
+            title
+            url
+            updatedAt
+            reviews(first: 10, states: [CHANGES_REQUESTED, APPROVED]) {
+              totalCount
+              nodes {
+                state
+              }
+            }
+            comments {
+              totalCount
+            }
+            commits(first: 10) {
+              nodes {
+                commit {
+                  status {
+                    id
+                    state
+                  }
+                }
+              }
+            }
+          }
+          totalCount
+        }
+      }
+    }`, Object.assign({}, github.context.repo));
+            console.log(reso);
             let text = 'The following pull requests are waiting for review';
-            pullRequests.forEach((pr) => text = text.concat(`\n💩 <${pr.html_url}|${pr.title}> | ✅2 ❌1`));
+            pullRequests.forEach((pr) => text = text.concat(`\n💩 <${pr.html_url}|${pr.title}>`));
             const message = {
                 text,
                 username: 'Cuddly Chainsaw PR Notifications',
