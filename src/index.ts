@@ -13,9 +13,9 @@ async function run(): Promise<void> {
 
     // console.log(pullRequests)
 
-    const text = 'The following pull requests are waiting for review'
+    let text = 'The following pull requests are waiting for review'
 
-    pullRequests.forEach((pr) => text.concat(`\n💩 <${pr.html_url}|${pr.title}> | ✅2 ❌1`))
+    pullRequests.forEach((pr) => text = text.concat(`\n💩 <${pr.html_url}|${pr.title}> | ✅2 ❌1`))
 
     const message = {
       text,
