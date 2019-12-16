@@ -13,8 +13,12 @@ async function run(): Promise<void> {
 
     // console.log(pullRequests)
 
+    const text = 'The following pull requests are waiting for review'
+
+    pullRequests.forEach((pr) => text.concat(`\n💩 <${pr.html_url}|${pr.title}> | ✅2 ❌1`))
+
     const message = {
-      text: `Hello,\nYou have ${pullRequests.length} PRs!`,
+      text,
       username: 'Cuddly Chainsaw PR Notifications',
       icon_emoji: ':ghost:'
     }
