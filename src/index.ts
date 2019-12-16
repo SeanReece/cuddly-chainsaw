@@ -1,6 +1,6 @@
 import * as github from '@actions/github'
 import * as core from '@actions/core'
-import wretch from 'wretch'
+import axios from 'axios'
 
 async function run(): Promise<void> {
   try {
@@ -19,8 +19,7 @@ async function run(): Promise<void> {
       icon_emoji: ':ghost:'
     }
 
-    const slackHook = wretch(slackWebhook)
-    const response = await slackHook.post(message).json()
+    const response = await axios.post(slackWebhook, message)
     console.log(response)
   } catch (error) {
     core.setFailed(error.message)
