@@ -1699,11 +1699,8 @@ function run() {
         try {
             const token = core.getInput('repo-token');
             const octokit = new github.GitHub(token);
-            console.log(github.context);
-            const { data: pullRequest } = yield octokit.pulls.list({
-                owner: 'octokit',
-                repo: 'rest.js'
-            });
+            // console.log(github.context.repo)
+            const { data: pullRequest } = yield octokit.pulls.list(Object.assign({}, github.context.repo));
             console.log(pullRequest);
         }
         catch (error) {
