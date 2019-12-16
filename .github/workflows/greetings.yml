@@ -1,0 +1,11 @@
+name: Greetings
+
+on: [pull_request, issues]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: ./cuddly_chainsaw
+      with:
+        pr-message: 'Message that will be displayed on users'' first pr'
