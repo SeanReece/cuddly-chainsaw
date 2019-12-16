@@ -8,10 +8,10 @@ async function run(): Promise<void> {
     const slackWebhook: string = core.getInput('slack-webhook')
 
     const octokit = new github.GitHub(token)
-
+    console.log(github.context.repo)
     const {data: pullRequests} = await octokit.pulls.list({...github.context.repo})
 
-    console.log(pullRequests)
+    // console.log(pullRequests)
 
     const message = {
       text: `Hello,\nYou have ${pullRequests.length} PRs!`,
@@ -20,7 +20,7 @@ async function run(): Promise<void> {
     }
 
     const response = await axios.post(slackWebhook, message)
-    console.log(response)
+    // console.log(response)
   } catch (error) {
     core.setFailed(error.message)
   }

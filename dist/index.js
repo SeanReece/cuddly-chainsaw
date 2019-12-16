@@ -8800,15 +8800,16 @@ function run() {
             const token = core.getInput('repo-token');
             const slackWebhook = core.getInput('slack-webhook');
             const octokit = new github.GitHub(token);
+            console.log(github.context.repo);
             const { data: pullRequests } = yield octokit.pulls.list(Object.assign({}, github.context.repo));
-            console.log(pullRequests);
+            // console.log(pullRequests)
             const message = {
                 text: `Hello,\nYou have ${pullRequests.length} PRs!`,
                 username: 'Cuddly Chainsaw PR Notifications',
                 icon_emoji: ':ghost:'
             };
             const response = yield axios_1.default.post(slackWebhook, message);
-            console.log(response);
+            // console.log(response)
         }
         catch (error) {
             core.setFailed(error.message);
