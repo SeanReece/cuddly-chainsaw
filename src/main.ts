@@ -9,7 +9,7 @@ async function run(): Promise<void> {
 
     console.log(github.context)
 
-    const { data: pullRequest } = await octokit.pulls.get({
+    const { data: pullRequest } = await octokit.pulls.list({
         owner: 'octokit',
         repo: 'rest.js'
     });
