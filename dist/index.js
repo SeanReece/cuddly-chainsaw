@@ -8798,7 +8798,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = core.getInput('repo-token');
-            const slackWebhook = core.getInput('slack_webhook');
+            const slackWebhook = core.getInput('slack-webhook');
             const octokit = new github.GitHub(token);
             const { data: pullRequests } = yield octokit.pulls.list(Object.assign({}, github.context.repo));
             console.log(pullRequests);
