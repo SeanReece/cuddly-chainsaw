@@ -7,6 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: ./cuddly_chainsaw
-      with:
-        pr-message: 'Message that will be displayed on users'' first pr'
+    - uses: ./
+      with: 
+        milliseconds: 1000
