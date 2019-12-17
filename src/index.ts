@@ -81,7 +81,7 @@ async function run(): Promise<void> {
 }
 
 async function funTimes(pullRequests: any, octokit: any, githubCtx: any): Promise<void> {
-  pullRequests.forEach(async (v: any) => {
+  await pullRequests.map(async (v: any): Promise<void> => {
     const ref = v.headRef.name
     console.log("HEADREFNAME", ref)
     await getStatuses(octokit, githubCtx, ref)
