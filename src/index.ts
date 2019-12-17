@@ -56,7 +56,6 @@ async function run(): Promise<void> {
 
     const pullRequests = response && response.repository.pullRequests.nodes
     const repoName = response && response.repository.nameWithOwner
-    console.log(pullRequests)
 
     const readyPRS = pullRequests.filter((pr: any) => !pr.isDraft && !pr.title.toLowerCase().startsWith('[wip]'))
 
@@ -73,7 +72,7 @@ async function run(): Promise<void> {
       } else {
         status = `*${pr.reviews.totalCount} approvals*`
       }
-      text = text.concat(`\n✅ <${pr.url}|${pr.title}> | ${status} | ${format(pr.createdAt, 'en_US')}`)
+      text = text.concat(`\n👉 <${pr.url}|${pr.title}> | ${status} | ${format(pr.createdAt, 'en_US')}`)
     })
 
     const message = {
@@ -82,7 +81,7 @@ async function run(): Promise<void> {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*${repoName}* has ${readyPRS.length} PRs ready for review`
+            text: `\n*${repoName}* has ${readyPRS.length} PRs ready for review`
           }
         },
         {

@@ -9124,7 +9124,6 @@ function run() {
                 } }));
             const pullRequests = response && response.repository.pullRequests.nodes;
             const repoName = response && response.repository.nameWithOwner;
-            console.log(pullRequests);
             const readyPRS = pullRequests.filter((pr) => !pr.isDraft && !pr.title.toLowerCase().startsWith('[wip]'));
             yield funTimes(pullRequests, octokit, github.context);
             let text = '';
@@ -9139,7 +9138,7 @@ function run() {
                 else {
                     status = `*${pr.reviews.totalCount} approvals*`;
                 }
-                text = text.concat(`\n✅ <${pr.url}|${pr.title}> | ${status} | ${timeago_js_1.format(pr.createdAt, 'en_US')}`);
+                text = text.concat(`\n👉 <${pr.url}|${pr.title}> | ${status} | ${timeago_js_1.format(pr.createdAt, 'en_US')}`);
             });
             const message = {
                 blocks: [
@@ -9147,7 +9146,7 @@ function run() {
                         type: "section",
                         text: {
                             type: "mrkdwn",
-                            text: `*${repoName}* has ${readyPRS.length} PRs ready for review`
+                            text: `\n*${repoName}* has ${readyPRS.length} PRs ready for review`
                         }
                     },
                     {
