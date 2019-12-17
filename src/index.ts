@@ -8,17 +8,17 @@ async function run(): Promise<void> {
     const slackWebhook: string = core.getInput('slack-webhook')
 
     const octokit = new github.GitHub(token)
-    console.log(github.context.repo)
-    const {data: pullRequests} = await octokit.pulls.list({...github.context.repo})
 
-    const reso = await octokit.graphql(`query prs($owner: String!, $repo: String!) {
+    const response = await octokit.graphql(`query prs($owner: String!, $repo: String!) {
       repository(owner:$owner, name:$repo) {
+        nameWithOwner,
         pullRequests(first: 100, states: OPEN, labels: "ready") {
           nodes {
             id
             title
             url
             updatedAt
+            isDraft
             reviews(first: 10, states: [CHANGES_REQUESTED, APPROVED]) {
               totalCount
               nodes {
@@ -45,11 +45,13 @@ async function run(): Promise<void> {
     }`, {...github.context.repo}
   )
 
-    console.log(reso)
+    const pullRequests = response && response.repository.pullRequests.nodes
+    const repoName = response && response.repository.nameWithOwner
+    console.log(pullRequests)
 
-    let text = 'The following pull requests are waiting for review'
+    let text = `The following pull requests are waiting for review on ${repoName}`
 
-    pullRequests.forEach((pr) => text = text.concat(`\n💩 <${pr.html_url}|${pr.title}>`))
+    pullRequests.forEach((pr: any) => text = text.concat(`\n✅ <${pr.url}|${pr.title}>`))
 
     const message = {
       text,
@@ -57,7 +59,7 @@ async function run(): Promise<void> {
       icon_emoji: ':ghost:'
     }
 
-    const response = await axios.post(slackWebhook, message)
+    return await axios.post(slackWebhook, message)
     // console.log(response)
   } catch (error) {
     core.setFailed(error.message)
