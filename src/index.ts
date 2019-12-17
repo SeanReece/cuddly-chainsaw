@@ -55,7 +55,7 @@ async function run(): Promise<void> {
     const repoName = response && response.repository.nameWithOwner
     console.log(pullRequests)
 
-    pullRequests = pullRequests.filter((pr: any ) => !pr.isDraft && pr.title.toLowerCase().startsWith('[wip]'))
+    pullRequests = pullRequests.filter((pr: any) => !pr.isDraft && !pr.title.toLowerCase().startsWith('[wip]'))
 
     let text = `The following pull requests are waiting for review on ${repoName}`
 

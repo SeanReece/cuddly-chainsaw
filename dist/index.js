@@ -9122,7 +9122,7 @@ function run() {
             let pullRequests = response && response.repository.pullRequests.nodes;
             const repoName = response && response.repository.nameWithOwner;
             console.log(pullRequests);
-            pullRequests = pullRequests.filter((pr) => !pr.isDraft && pr.title.toLowerCase().startsWith('[wip]'));
+            pullRequests = pullRequests.filter((pr) => !pr.isDraft && !pr.title.toLowerCase().startsWith('[wip]'));
             let text = `The following pull requests are waiting for review on ${repoName}`;
             pullRequests.forEach((pr) => text = text.concat(`\n✅ <${pr.url}|${pr.title}> | ${timeago_js_1.format(pr.createdAt, 'en_US')}`));
             const message = {
