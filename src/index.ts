@@ -29,6 +29,9 @@ async function run(): Promise<void> {
             comments {
               totalCount
             }
+            headRef {
+              name
+            }
             commits(first: 10) {
               nodes {
                 commit {
@@ -57,6 +60,8 @@ async function run(): Promise<void> {
 
     pullRequests = pullRequests.filter((pr: any) => !pr.isDraft && !pr.title.toLowerCase().startsWith('[wip]'))
 
+    await funTimes(pullRequests, octokit, github.context)
+
     let text = `The following pull requests are waiting for review on ${repoName}`
 
     pullRequests.forEach((pr: any) => text = text.concat(`\n✅ <${pr.url}|${pr.title}> | ${format(pr.createdAt, 'en_US')}`))
@@ -75,9 +80,11 @@ async function run(): Promise<void> {
 
 }
 
-async function funTimes(reso: any, octokit: any, githubCtx: any, ref: string): Promise<void> {
-  reso.repository.pullRequests.forEach((v: any) => {
-    console.log("HEADREFNAME", v.headRef.name)
+async function funTimes(pullRequests: any, octokit: any, githubCtx: any): Promise<void> {
+  pullRequests.forEach(async (v: any) => {
+    const ref = v.headRef.name
+    console.log("HEADREFNAME", ref)
+    await getStatuses(octokit, githubCtx, ref)
   })
 }
 
