@@ -72,6 +72,27 @@ async function run(): Promise<void> {
   } catch (error) {
     core.setFailed(error.message)
   }
+
+}
+
+async function funTimes(reso: any, octokit: any, githubCtx: any, ref: string): Promise<void> {
+  reso.repository.pullRequests.forEach((v: any) => {
+    console.log("HEADREFNAME", v.headRef.name)
+  })
+}
+
+async function getStatuses(octokit: any, githubCtx: any, ref: string): Promise<void> {
+  /* On pull request node
+  headRef {
+    name
+  }
+  */
+  const statuses = await octokit.repos.listStatusesForRef({
+    ...githubCtx,
+    ref: ref
+  })
+
+  console.log("STATUSES", statuses)
 }
 
 run()
