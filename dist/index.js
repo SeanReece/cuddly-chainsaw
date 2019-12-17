@@ -394,6 +394,101 @@ module.exports._enoent = enoent;
 
 /***/ }),
 
+/***/ 21:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/**
+ * Created by hustcc on 18/5/20.
+ * Contract: i@hust.cc
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var SEC_ARRAY = [60, 60, 24, 7, 365 / 7 / 12, 12];
+/**
+ * format Date / string / timestamp to timestamp
+ * @param input
+ * @returns {*}
+ */
+function toDate(input) {
+    if (input instanceof Date)
+        return input;
+    // @ts-ignore
+    if (!isNaN(input) || /^\d+$/.test(input))
+        return new Date(parseInt(input));
+    input = (input || '')
+        // @ts-ignore
+        .trim()
+        .replace(/\.\d+/, '') // remove milliseconds
+        .replace(/-/, '/')
+        .replace(/-/, '/')
+        .replace(/(\d)T(\d)/, '$1 $2')
+        .replace(/Z/, ' UTC') // 2017-2-5T3:57:52Z -> 2017-2-5 3:57:52UTC
+        .replace(/([+-]\d\d):?(\d\d)/, ' $1$2'); // -04:00 -> -0400
+    return new Date(input);
+}
+exports.toDate = toDate;
+/**
+ * format the diff second to *** time ago, with setting locale
+ * @param diff
+ * @param localeFunc
+ * @returns
+ */
+function formatDiff(diff, localeFunc) {
+    // if locale is not exist, use defaultLocale.
+    // if defaultLocale is not exist, use build-in `en`.
+    // be sure of no error when locale is not exist.
+    var agoIn = diff < 0 ? 1 : 0; // time in or time ago
+    diff = Math.abs(diff);
+    var totalSec = diff;
+    var idx = 0;
+    for (; diff >= SEC_ARRAY[idx] && idx < SEC_ARRAY.length; idx++) {
+        diff /= SEC_ARRAY[idx];
+    }
+    // Math.floor
+    diff = ~~diff;
+    idx *= 2;
+    if (diff > (idx === 0 ? 9 : 1))
+        idx += 1;
+    // @ts-ignore
+    return localeFunc(diff, idx, totalSec)[agoIn].replace('%s', diff);
+}
+exports.formatDiff = formatDiff;
+/**
+ * calculate the diff second between date to be formatted an now date.
+ * @param date
+ * @param relativeDate
+ * @returns
+ */
+function diffSec(date, relativeDate) {
+    relativeDate = relativeDate ? toDate(relativeDate) : new Date();
+    return (+relativeDate - +toDate(date)) / 1000;
+}
+exports.diffSec = diffSec;
+/**
+ * nextInterval: calculate the next interval time.
+ * - diff: the diff sec between now and date to be formatted.
+ *
+ * What's the meaning?
+ * diff = 61 then return 59
+ * diff = 3601 (an hour + 1 second), then return 3599
+ * make the interval with high performance.
+ **/
+function nextInterval(diff) {
+    var rst = 1, i = 0, d = Math.abs(diff);
+    for (; diff >= SEC_ARRAY[i] && i < SEC_ARRAY.length; i++) {
+        diff /= SEC_ARRAY[i];
+        rst *= SEC_ARRAY[i];
+    }
+    d = d % rst;
+    d = d ? rst - d : rst;
+    return Math.ceil(d);
+}
+exports.nextInterval = nextInterval;
+//# sourceMappingURL=date.js.map
+
+/***/ }),
+
 /***/ 26:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -417,6 +512,45 @@ module.exports = function createError(message, config, code, request, response) 
   return enhanceError(error, config, code, request, response);
 };
 
+
+/***/ }),
+
+/***/ 30:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ATTR_TIMEAGO_TID = 'timeago-id';
+/**
+ * get the datetime attribute, `datetime` are supported.
+ * @param node
+ * @returns {*}
+ */
+function getDateAttribute(node) {
+    return node.getAttribute('datetime');
+}
+exports.getDateAttribute = getDateAttribute;
+/**
+ * set the node attribute, native DOM
+ * @param node
+ * @param timerId
+ * @returns {*}
+ */
+function setTimerId(node, timerId) {
+    // @ts-ignore
+    node.setAttribute(ATTR_TIMEAGO_TID, timerId);
+}
+exports.setTimerId = setTimerId;
+/**
+ * get the timer id
+ * @param node
+ */
+function getTimerId(node) {
+    return parseInt(node.getAttribute(ATTR_TIMEAGO_TID));
+}
+exports.getTimerId = getTimerId;
+//# sourceMappingURL=dom.js.map
 
 /***/ }),
 
@@ -2313,6 +2447,72 @@ function paginatePlugin(octokit) {
 
 /***/ }),
 
+/***/ 166:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var dom_1 = __webpack_require__(30);
+var date_1 = __webpack_require__(21);
+var register_1 = __webpack_require__(220);
+// all realtime timer
+var TIMER_POOL = {};
+/**
+ * clear a timer from pool
+ * @param tid
+ */
+var clear = function (tid) {
+    clearTimeout(tid);
+    delete TIMER_POOL[tid];
+};
+// run with timer(setTimeout)
+function run(node, date, localeFunc, opts) {
+    // clear the node's exist timer
+    clear(dom_1.getTimerId(node));
+    var relativeDate = opts.relativeDate, minInterval = opts.minInterval;
+    // get diff seconds
+    var diff = date_1.diffSec(date, relativeDate);
+    // render
+    node.innerText = date_1.formatDiff(diff, localeFunc);
+    var tid = setTimeout(function () {
+        run(node, date, localeFunc, opts);
+    }, Math.min(Math.max(date_1.nextInterval(diff), minInterval || 1) * 1000, 0x7fffffff));
+    // there is no need to save node in object. Just save the key
+    TIMER_POOL[tid] = 0;
+    dom_1.setTimerId(node, tid);
+}
+// 取消一个 node 的实时渲染
+function cancel(node) {
+    // cancel one
+    if (node)
+        clear(dom_1.getTimerId(node));
+    // cancel all
+    // @ts-ignore
+    else
+        Object.keys(TIMER_POOL).forEach(clear);
+}
+exports.cancel = cancel;
+/**
+ * render a dom realtime
+ * @param nodes
+ * @param locale
+ * @param opts
+ */
+function render(nodes, locale, opts) {
+    // by .length
+    // @ts-ignore
+    var nodeList = nodes.length ? nodes : [nodes];
+    nodeList.forEach(function (node) {
+        run(node, dom_1.getDateAttribute(node), register_1.getLocale(locale), opts || {});
+    });
+    return nodeList;
+}
+exports.render = render;
+//# sourceMappingURL=realtime.js.map
+
+/***/ }),
+
 /***/ 168:
 /***/ (function(module) {
 
@@ -2359,6 +2559,26 @@ module.exports = opts => {
 	return result;
 };
 
+
+/***/ }),
+
+/***/ 178:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var EN_US = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
+function default_1(diff, idx) {
+    if (idx === 0)
+        return ['just now', 'right now'];
+    var unit = EN_US[~~(idx / 2)];
+    if (diff > 1)
+        unit += 's';
+    return [diff + " " + unit + " ago", "in " + diff + " " + unit];
+}
+exports.default = default_1;
+//# sourceMappingURL=en_US.js.map
 
 /***/ }),
 
@@ -2631,6 +2851,40 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
+
+/***/ }),
+
+/***/ 220:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/**
+ * Created by hustcc on 18/5/20.
+ * Contract: i@hust.cc
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * All supported locales
+ */
+var Locales = {};
+/**
+ * register a locale
+ * @param locale
+ * @param func
+ */
+exports.register = function (locale, func) {
+    Locales[locale] = func;
+};
+/**
+ * get a locale, default is en_US
+ * @param locale
+ * @returns {*}
+ */
+exports.getLocale = function (locale) {
+    return Locales[locale] || Locales['en_US'];
+};
+//# sourceMappingURL=register.js.map
 
 /***/ }),
 
@@ -6661,6 +6915,34 @@ module.exports = require("stream");
 
 /***/ }),
 
+/***/ 419:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * Created by hustcc on 18/5/20.
+ * Contract: i@hust.cc
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var en_US_1 = __importDefault(__webpack_require__(178));
+var zh_CN_1 = __importDefault(__webpack_require__(673));
+var register_1 = __webpack_require__(220);
+exports.register = register_1.register;
+register_1.register('en_US', en_US_1.default);
+register_1.register('zh_CN', zh_CN_1.default);
+var format_1 = __webpack_require__(914);
+exports.format = format_1.format;
+var realtime_1 = __webpack_require__(166);
+exports.render = realtime_1.render;
+exports.cancel = realtime_1.cancel;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
 /***/ 427:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -8794,6 +9076,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const github = __importStar(__webpack_require__(469));
 const core = __importStar(__webpack_require__(393));
 const axios_1 = __importDefault(__webpack_require__(53));
+const timeago_js_1 = __webpack_require__(419);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -8803,12 +9086,12 @@ function run() {
             const response = yield octokit.graphql(`query prs($owner: String!, $repo: String!) {
       repository(owner:$owner, name:$repo) {
         nameWithOwner,
-        pullRequests(first: 100, states: OPEN, labels: "ready", isDraft: false) {
+        pullRequests(first: 100, states: OPEN) {
           nodes {
             id
             title
             url
-            updatedAt
+            createdAt
             isDraft
             reviews(first: 10, states: [CHANGES_REQUESTED, APPROVED]) {
               totalCount
@@ -8836,11 +9119,12 @@ function run() {
     }`, Object.assign(Object.assign({}, github.context.repo), { headers: {
                     accept: `application/vnd.github.shadow-cat-preview+json`
                 } }));
-            const pullRequests = response && response.repository.pullRequests.nodes;
+            let pullRequests = response && response.repository.pullRequests.nodes;
             const repoName = response && response.repository.nameWithOwner;
             console.log(pullRequests);
+            pullRequests = pullRequests.filter((pr) => !pr.isDraft && pr.title.toLowerCase().startsWith('[wip]'));
             let text = `The following pull requests are waiting for review on ${repoName}`;
-            pullRequests.forEach((pr) => text = text.concat(`\n✅ <${pr.url}|${pr.title}>`));
+            pullRequests.forEach((pr) => text = text.concat(`\n✅ <${pr.url}|${pr.title}> | ${timeago_js_1.format(pr.createdAt, 'en_US')}`));
             const message = {
                 text,
                 username: 'Cuddly Chainsaw PR Notifications',
@@ -10277,6 +10561,24 @@ module.exports = function httpAdapter(config) {
   });
 };
 
+
+/***/ }),
+
+/***/ 673:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ZH_CN = ['秒', '分钟', '小时', '天', '周', '个月', '年'];
+function default_1(diff, idx) {
+    if (idx === 0)
+        return ['刚刚', '片刻后'];
+    var unit = ZH_CN[~~(idx / 2)];
+    return [diff + " " + unit + "\u524D", diff + " " + unit + "\u540E"];
+}
+exports.default = default_1;
+//# sourceMappingURL=zh_CN.js.map
 
 /***/ }),
 
@@ -13837,6 +14139,30 @@ function patchForDeprecation(octokit, apiOptions, method, methodName) {
   return patchedMethod;
 }
 
+
+/***/ }),
+
+/***/ 914:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var date_1 = __webpack_require__(21);
+var register_1 = __webpack_require__(220);
+/**
+ * format a TDate into string
+ * @param date
+ * @param locale
+ * @param opts
+ */
+exports.format = function (date, locale, opts) {
+    // diff seconds
+    var sec = date_1.diffSec(date, opts && opts.relativeDate);
+    // format it with locale
+    return date_1.formatDiff(sec, register_1.getLocale(locale));
+};
+//# sourceMappingURL=format.js.map
 
 /***/ }),
 
