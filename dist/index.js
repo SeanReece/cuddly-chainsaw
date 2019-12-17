@@ -9159,7 +9159,7 @@ function getStatuses(octokit, githubCtx, ref) {
           name
         }
         */
-        const statuses = yield octokit.repos.listStatusesForRef(Object.assign(Object.assign({}, githubCtx.repo), { ref: ref }));
+        const statuses = yield octokit.repos.listStatusesForRef(Object.assign(Object.assign({}, githubCtx.repo), { ref: '3cbffe40a50057747bcfb55aed2538e587b163fd' }));
         console.log("STATUSES", statuses);
     });
 }
