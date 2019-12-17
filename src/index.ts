@@ -104,7 +104,7 @@ async function run(): Promise<void> {
           ]
         }
       ],
-      username: 'Cuddly Chainsaw PR Reporter',
+      username: 'PR Reporter',
       icon_emoji: ':rolled_up_newspaper:' 
     }
 
