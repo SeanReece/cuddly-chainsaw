@@ -9144,11 +9144,12 @@ function run() {
 }
 function funTimes(pullRequests, octokit, githubCtx) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield pullRequests.map((v) => __awaiter(this, void 0, void 0, function* () {
+        const promises = pullRequests.map((v) => __awaiter(this, void 0, void 0, function* () {
             const ref = v.headRef.name;
             console.log("HEADREFNAME", ref);
-            yield getStatuses(octokit, githubCtx, ref);
+            return getStatuses(octokit, githubCtx, ref);
         }));
+        return yield Promise.all(promises);
     });
 }
 function getStatuses(octokit, githubCtx, ref) {

@@ -80,12 +80,14 @@ async function run(): Promise<void> {
 
 }
 
-async function funTimes(pullRequests: any, octokit: any, githubCtx: any): Promise<void> {
-  await pullRequests.map(async (v: any): Promise<void> => {
+async function funTimes(pullRequests: any, octokit: any, githubCtx: any): Promise<any> {
+  const promises = pullRequests.map(async (v: any): Promise<void> => {
     const ref = v.headRef.name
     console.log("HEADREFNAME", ref)
-    await getStatuses(octokit, githubCtx, ref)
+    return getStatuses(octokit, githubCtx, ref)
   })
+
+  return await Promise.all(promises)
 }
 
 async function getStatuses(octokit: any, githubCtx: any, ref: string): Promise<void> {
