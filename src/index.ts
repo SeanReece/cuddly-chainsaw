@@ -97,7 +97,7 @@ async function getStatuses(octokit: any, githubCtx: any, ref: string): Promise<v
   }
   */
   const statuses = await octokit.repos.listStatusesForRef({
-    ...githubCtx,
+    ...githubCtx.repo,
     ref: ref
   })
 
