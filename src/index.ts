@@ -54,22 +54,59 @@ async function run(): Promise<void> {
       }
     )
 
-    let pullRequests = response && response.repository.pullRequests.nodes
+    const pullRequests = response && response.repository.pullRequests.nodes
     const repoName = response && response.repository.nameWithOwner
     console.log(pullRequests)
 
-    pullRequests = pullRequests.filter((pr: any) => !pr.isDraft && !pr.title.toLowerCase().startsWith('[wip]'))
+    const readyPRS = pullRequests.filter((pr: any) => !pr.isDraft && !pr.title.toLowerCase().startsWith('[wip]'))
 
     await funTimes(pullRequests, octokit, github.context)
 
-    let text = `The following pull requests are waiting for review on ${repoName}`
+    let text = ''
 
-    pullRequests.forEach((pr: any) => text = text.concat(`\n✅ <${pr.url}|${pr.title}> | ${format(pr.createdAt, 'en_US')}`))
+    readyPRS.forEach((pr: any) => {
+      let status = ''
+      if (pr.reviews.totalCount === 0) {
+        status = '*No reviews*'
+      } else if (pr.reviews.nodes.some((review: any) => review.state === 'CHANGES_REQUESTED')) {
+        status = '*Changes Requested*'
+      } else {
+        status = `*${pr.reviews.totalCount} approvals*`
+      }
+      text = text.concat(`\n✅ <${pr.url}|${pr.title}> | ${status} | ${format(pr.createdAt, 'en_US')}`)
+    })
 
     const message = {
-      text,
-      username: 'Cuddly Chainsaw PR Notifications',
-      icon_emoji: ':ghost:'
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*${repoName}* has ${readyPRS.length} PRs ready for review`
+          }
+        },
+        {
+          type: "divider"
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text
+          }
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: `You have *${pullRequests.length}* open PRs and *${readyPRS.length}* ready for review`
+            }
+          ]
+        }
+      ],
+      username: 'Cuddly Chainsaw PR Reporter',
+      icon_emoji: ':rolled_up_newspaper:' 
     }
 
     return await axios.post(slackWebhook, message)
