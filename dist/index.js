@@ -8809,6 +8809,7 @@ function run() {
             title
             url
             updatedAt
+            isDraft
             reviews(first: 10, states: [CHANGES_REQUESTED, APPROVED]) {
               totalCount
               nodes {
@@ -8832,7 +8833,9 @@ function run() {
           totalCount
         }
       }
-    }`, Object.assign({}, github.context.repo));
+    }`, Object.assign(Object.assign({}, github.context.repo), { headers: {
+                    accept: `application/vnd.github.shadow-cat-preview+json`
+                } }));
             const pullRequests = response && response.repository.pullRequests.nodes;
             const repoName = response && response.repository.nameWithOwner;
             console.log(pullRequests);

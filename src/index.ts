@@ -18,6 +18,7 @@ async function run(): Promise<void> {
             title
             url
             updatedAt
+            isDraft
             reviews(first: 10, states: [CHANGES_REQUESTED, APPROVED]) {
               totalCount
               nodes {
@@ -41,7 +42,12 @@ async function run(): Promise<void> {
           totalCount
         }
       }
-    }`, {...github.context.repo}
+    }`, {
+      ...github.context.repo, 
+      headers: {
+        accept: `application/vnd.github.shadow-cat-preview+json`
+      }
+    }
   )
 
     const pullRequests = response && response.repository.pullRequests.nodes
