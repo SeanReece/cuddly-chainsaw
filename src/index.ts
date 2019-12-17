@@ -12,7 +12,7 @@ async function run(): Promise<void> {
     const response = await octokit.graphql(`query prs($owner: String!, $repo: String!) {
       repository(owner:$owner, name:$repo) {
         nameWithOwner,
-        pullRequests(first: 100, states: OPEN, labels: "ready") {
+        pullRequests(first: 100, states: OPEN, labels: "ready", isDraft: false) {
           nodes {
             id
             title
