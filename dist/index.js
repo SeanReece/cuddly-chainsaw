@@ -8809,7 +8809,6 @@ function run() {
             title
             url
             updatedAt
-            isDraft
             reviews(first: 10, states: [CHANGES_REQUESTED, APPROVED]) {
               totalCount
               nodes {
